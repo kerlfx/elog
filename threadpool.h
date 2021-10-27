@@ -21,7 +21,7 @@ private:
 
     std::condition_variable condition;
 
-    bool stop;
+    bool stop = false;
 
 public:
     ThreadPool(size_t threadn);
@@ -30,18 +30,22 @@ public:
     size_t getQueueSize();
 };
 
-template <class F, class... Args> auto ThreadPool::toQueue(F &&f, Args &&...args)
+template <class F, class... Args>
+auto ThreadPool::toQueue(F &&f, Args &&...args)
 {
-    using retrun_type = std::result_of<F(Args...)>::type;
-    auto func = std::make_shared<std::packaged_task<retrun_type()>>(std::bind(f, args...));
+    using result_type = std::result_of<F(Args...)>::type;
+    auto func = std::make_shared<std::packaged_task<result_type()>>(
+        std::bind(f, args...));
 
     auto res = func->get_future();
 
     {
         std::unique_lock<std::mutex> lk(func_queue);
         if (stop)
-            throw std::runtime_error("stopped");
-        funcs.emplace([func]() { (*func)(); });
+        {
+            throw std::runtime_error("ThreadPool is stopped!");
+        }
+        funcs.emplace([func] { (*func)(); });
     }
     condition.notify_one();
     return res;
