@@ -4,13 +4,14 @@
 // #pragma once
 
 #include <iostream>
+#include <memory>
 #include <mutex>
 
 #include "threadpool.h"
 
 enum class LogLevel : std::int8_t
 {
-    LOG_OFF = 0,
+    LOG_OFF = -1,
     LOG_ERROR,
     LOG_WARM,
     LOG_INFO,
@@ -25,13 +26,18 @@ private:
 
     LogLevel log_level;
 
+    std::string log_level_head[static_cast<int>(LogLevel::LOG_DEBUG) + 1];
+
     ThreadPool tpl;
 
     ELog(LogLevel level = LogLevel::LOG_INFO);
     ~ELog();
 
-    template <class OS> void osp(OS value);
-    template <class OS, class... OSArgs> void osp(OS value, OSArgs... fargs);
+    template <class OS> auto osp(OS &&value);
+    template <class OS, class... OSArgs>
+    auto osp(OS &&value, OSArgs &&...fargs);
+
+    std::shared_ptr<std::string> elogGetTimeStr();
 
 public:
     size_t elogOutGetQueueSize();
@@ -39,9 +45,10 @@ public:
     LogLevel elogOutGetLevel();
     void elogOutSetLevel(LogLevel level);
 
-    template <class... OSArgs> void elogOut(OSArgs... fargs);
+    template <class... OSArgs>
+    auto elogOut(LogLevel log_level, OSArgs &&...fargs);
 
-    static ELog *elgoPtr()
+    static auto elgoPtr()
     {
 
         if (elog_ptr == nullptr)
@@ -56,24 +63,31 @@ public:
     }
 };
 
-template <class... OSArgs> void ELog::elogOut(OSArgs... fargs)
+template <class... OSArgs>
+auto ELog::elogOut(LogLevel log_level, OSArgs &&...fargs)
 {
-
+    auto time_str = elogGetTimeStr();
+ 
     tpl.toQueue(
-        [fargs...]
+        [log_level, time_str, fargs...]
         {
-            ELog::elgoPtr()->osp(fargs...);
+            ELog::elgoPtr()->osp(
+                ELog::elgoPtr()
+                    ->log_level_head[static_cast<int>(log_level)]
+                    .data(),
+                "|", time_str->data(), "| ", fargs...);
             return;
         });
 }
 
-template <class OS> void ELog::osp(OS value)
+template <class OS> auto ELog::osp(OS &&value)
 {
     std::cout << value << "\n";
     return;
 }
 
-template <class OS, class... OSArgs> void ELog::osp(OS value, OSArgs... args)
+template <class OS, class... OSArgs>
+auto ELog::osp(OS &&value, OSArgs &&...args)
 {
 
     std::cout << value;
@@ -83,25 +97,29 @@ template <class OS, class... OSArgs> void ELog::osp(OS value, OSArgs... args)
 
 #define LOG_SET_lEVEL(x) ELog::elgoPtr()->elogOutSetLevel(x)
 
-#define LOG_I(...)                                                                                 \
-    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_INFO)                                  \
-    {                                                                                              \
-        ELog::elgoPtr()->elogOut("INF| ", __FUNCTION__, "(", __LINE__, "):", __VA_ARGS__);         \
+#define LOG_I(...)                                                             \
+    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_INFO)              \
+    {                                                                          \
+        ELog::elgoPtr()->elogOut(LogLevel::LOG_INFO, __FUNCTION__, "(",        \
+                                 __LINE__, "):", __VA_ARGS__);                 \
     }
-#define LOG_W(...)                                                                                 \
-    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_WARM)                                  \
-    {                                                                                              \
-        ELog::elgoPtr()->elogOut("WAR| ", __FUNCTION__, "(", __LINE__, "):", __VA_ARGS__);         \
+#define LOG_W(...)                                                             \
+    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_WARM)              \
+    {                                                                          \
+        ELog::elgoPtr()->elogOut(LogLevel::LOG_WARM, __FUNCTION__, "(",        \
+                                 __LINE__, "):", __VA_ARGS__);                 \
     }
-#define LOG_E(...)                                                                                 \
-    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_ERROR)                                 \
-    {                                                                                              \
-        ELog::elgoPtr()->elogOut("ERR| ", __FUNCTION__, "(", __LINE__, "):", __VA_ARGS__);         \
+#define LOG_E(...)                                                             \
+    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_ERROR)             \
+    {                                                                          \
+        ELog::elgoPtr()->elogOut(LogLevel::LOG_ERROR, __FUNCTION__, "(",       \
+                                 __LINE__, "):", __VA_ARGS__);                 \
     }
-#define LOG_D(...)                                                                                 \
-    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_DEBUG)                                 \
-    {                                                                                              \
-        ELog::elgoPtr()->elogOut("DEB| ", __FUNCTION__, "(", __LINE__, "):", __VA_ARGS__);         \
+#define LOG_D(...)                                                             \
+    if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_DEBUG)             \
+    {                                                                          \
+        ELog::elgoPtr()->elogOut(LogLevel::LOG_DEBUG, __FUNCTION__, "(",       \
+                                 __LINE__, "):", __VA_ARGS__);                 \
     }
 
 #endif // ELOG_H_
