@@ -37,6 +37,6 @@ ThreadPool::~ThreadPool()
     stop = true;
     condition.notify_all();
 
-    for (auto &threadp : threads)
+    for (auto &&threadp : threads)
         threadp.join();
 }

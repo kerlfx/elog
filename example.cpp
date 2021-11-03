@@ -35,22 +35,23 @@ int main(int argc, char const *argv[])
 
     LOG_I("hello world")
     LOG_SET_lEVEL(LogLevel::LOG_WARM);
+    double n = 2.3;
     for (int i = 0; i < 10; i++)
     {
         thread.toQueue(
-            [i] {
-                LOG_I("hello", " world ", "log ", i, "+", i * 2, "=",
-                      add(i, i * 2))
+            [i, n] {
+                LOG_I("hello", " world ", "log ", i, "+", i * n, "=",
+                      add(i, i * n))
             });
         thread.toQueue(
-            [i] {
-                LOG_W("hello", " world ", "log ", i, "+", i * 2, "=",
-                      add(i, i * 2))
+            [i, n] {
+                LOG_W("hello", " world ", "log ", i, "+", i * n, "=",
+                      add(i, i * n))
             });
         thread.toQueue(
-            [i] {
-                LOG_E("hello", " world ", "log ", i, "+", i * 2, "=",
-                      add(i, i * 2))
+            [i, n] {
+                LOG_E("hello", " world ", "log ", i, "+", i * n, "=",
+                      add(i, i * n))
             });
     }
 
