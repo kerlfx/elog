@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <sstream>
 
 #include "threadpool.h"
 
@@ -39,6 +40,7 @@ private:
 
     std::shared_ptr<std::string> elogGetTimeStr();
 
+
 public:
     size_t elogOutGetQueueSize();
 
@@ -67,11 +69,11 @@ template <class... OSArgs>
 auto ELog::elogOut(LogLevel log_level, OSArgs &&...fargs)
 {
     auto time_str = elogGetTimeStr();
- 
+
     tpl.toQueue(
         [log_level, time_str, fargs...]
         {
-            ELog::elgoPtr()->osp(
+            std::cout << ELog::elgoPtr()->osp(
                 ELog::elgoPtr()
                     ->log_level_head[static_cast<int>(log_level)]
                     .data(),
@@ -82,17 +84,17 @@ auto ELog::elogOut(LogLevel log_level, OSArgs &&...fargs)
 
 template <class OS> auto ELog::osp(OS &&value)
 {
-    std::cout << value << "\n";
-    return;
+    std::ostringstream obuf;
+    obuf << value << "\n";
+    return obuf.str();
 }
 
 template <class OS, class... OSArgs>
 auto ELog::osp(OS &&value, OSArgs &&...args)
 {
-
-    std::cout << value;
-    osp(args...);
-    return;
+    std::ostringstream obuf;
+    obuf << value << osp(args...);
+    return obuf.str();
 };
 
 #define LOG_SET_lEVEL(x) ELog::elgoPtr()->elogOutSetLevel(x)

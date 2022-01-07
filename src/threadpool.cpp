@@ -1,6 +1,9 @@
 #include "threadpool.h"
 
-size_t ThreadPool::getQueueSize() { return funcs.size(); }
+size_t ThreadPool::getQueueSize()
+{
+    return funcs.size();
+}
 
 ThreadPool::ThreadPool(size_t threadn)
 {

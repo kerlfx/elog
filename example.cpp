@@ -1,8 +1,7 @@
-#include "elog.h"
-#include "threadpool.h"
+#include "src/elog.h"
+#include "src/threadpool.h"
 
 #include <chrono>
-#include <ctime>
 #include <iostream>
 #include <ratio>
 #include <thread>
@@ -10,7 +9,6 @@
 template <class A, class B> auto add(A &&a, B &&b)
 {
     auto n = a + b;
-    LOG_I(a, " + ", b, " = ", n)
     return n;
 }
 
@@ -36,7 +34,7 @@ int main(int argc, char const *argv[])
     LOG_I("hello world")
     LOG_SET_lEVEL(LogLevel::LOG_WARM);
     double n = 2.3;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 100; i++)
     {
         thread.toQueue(
             [i, n] {
