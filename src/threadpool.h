@@ -33,8 +33,8 @@ public:
 template <class F, class... Args>
 auto ThreadPool::toQueue(F &&f, Args &&...args)
 {
-    // using result_type = typename std::result_of<F(Args...)>::type;
-    using result_type = typename std::invoke_result<F, Args...>::type;
+    using result_type = typename std::result_of<F(Args...)>::type;
+    // using result_type = typename std::invoke_result<F, Args...>::type;
     auto func = std::make_shared<std::packaged_task<result_type()>>(
         std::bind(f, args...));
 
