@@ -40,7 +40,6 @@ private:
 
     std::shared_ptr<std::string> elogGetTimeStr();
 
-
 public:
     size_t elogOutGetQueueSize();
 
@@ -97,7 +96,7 @@ auto ELog::osp(OS &&value, OSArgs &&...args)
     return obuf.str();
 };
 
-#define LOG_SET_lEVEL(x) ELog::elgoPtr()->elogOutSetLevel(x)
+#define LOG_SET_lEVEL(x) ELog::elgoPtr()->elogOutSetLevel(x);
 
 #define LOG_I(...)                                                             \
     if (ELog::elgoPtr()->elogOutGetLevel() >= LogLevel::LOG_INFO)              \

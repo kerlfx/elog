@@ -34,7 +34,7 @@ int main(int argc, char const *argv[])
     LOG_I("hello world")
     LOG_SET_lEVEL(LogLevel::LOG_WARM);
     double n = 2.3;
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
     {
         thread.toQueue(
             [i, n] {
