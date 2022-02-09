@@ -3,12 +3,12 @@
 
 // #pragma once
 
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <sstream>
-
-#include "threadpool.h"
 
 enum class LogLevel : std::int8_t
 {
@@ -29,16 +29,21 @@ private:
 
     std::string log_level_head[static_cast<int>(LogLevel::LOG_DEBUG) + 1];
 
-    ThreadPool tpl;
+    typedef void *ThreadPool_Ptr;
+    ThreadPool_Ptr tpp = nullptr;
 
-    ELog(LogLevel level = LogLevel::LOG_INFO);
-    ~ELog();
+    // std::queue<std::function<void()>> log_fs;
+
+    void elogToThreadPool(std::function<void()> log_f);
 
     template <class OS> auto osp(OS &&value);
     template <class OS, class... OSArgs>
     auto osp(OS &&value, OSArgs &&...fargs);
 
     std::shared_ptr<std::string> elogGetTimeStr();
+
+    ELog(LogLevel level = LogLevel::LOG_INFO);
+    ~ELog();
 
 public:
     size_t elogOutGetQueueSize();
@@ -69,7 +74,7 @@ auto ELog::elogOut(LogLevel log_level, OSArgs &&...fargs)
 {
     auto time_str = elogGetTimeStr();
 
-    tpl.toQueue(
+    elogToThreadPool(
         [log_level, time_str, fargs...]
         {
             std::cout << ELog::elgoPtr()->osp(
